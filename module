@@ -1,0 +1,86 @@
+' This function merges the items with numbers 
+'
+' In below example each row is another cell, in out put it will merge item2 with a and b subitems
+' Example :
+' 1. Something
+' 2. Something else
+' a) More Things
+' b) More Thins2
+'
+
+Public Function MergeSubItemsToNumbers(Ref As Range, reg As String) As String
+    On Error GoTo ErrHandl
+    Set regEx = CreateObject("VBScript.RegExp"): regEx.Pattern = reg: regEx.Global = True
+    Dim CellNumber As Integer
+    Dim str As String
+    CellNumber = 0
+    For Each Cell In Ref
+        str = Cell.Value
+        If regEx.test(str) Then
+            If CellNumber = 0 Then
+                MergeSubItemsToNumbers = str
+            Else
+                Exit Function
+            End If
+        Else
+            If CellNumber > 0 Then
+                MergeSubItemsToNumbers = MergeSubItemsToNumbers & Chr(10) & str
+            Else
+                MergeSubItemsToNumbers = "delete"
+                Exit Function
+            End If
+        End If
+        CellNumber = CellNumber + 1
+    Next Cell
+    Exit Function
+ErrHandl:
+    MergeSubItemsToNumbers = CVErr(xlErrValue)
+End Function
+
+
+
+' This macro makes "1." "1.1." "2.3.1" bold in below example
+' Example :
+' 1. Something
+' 1.1. Something else
+' 
+' 2.3.1. Something else
+'
+'
+' uses regex    ^([0-9]+\.)+
+' makes changes in j1:k10000
+
+
+Sub BoldItemNumbers()
+
+Set regEx = CreateObject("VBScript.RegExp"): regEx.Pattern = "^([0-9]+\.)+": regEx.Global = True
+
+Dim s As Integer, l As Integer
+    For Each cell In Range("j1:k10000")
+        'cell.Font.Bold = False
+        If regEx.test(cell) = True Then
+            Set mc = regEx.Execute(cell)
+            For Each m In mc
+                s = m.FirstIndex
+                l = m.Length
+                cell.Characters(s + 1, l).Font.Bold = True
+            Next m
+            Debug.Print cell
+        End If
+    Next cell
+End Sub
+
+
+' This macro deletes row if any of the cells it checks have exactly "delete" in it
+' Checks range "k1:k10000"
+
+Sub DeleteRows()
+    Dim rng As Range
+    Set rng = Range("k1:k10000")
+    
+    For i = rng.Cells.Count To 1 Step -1
+        If rng.item(i).Value = "delete" Then
+            rng.item(i).EntireRow.Delete
+        End If
+    Next i
+End Sub
